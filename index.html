@@ -543,12 +543,13 @@ async function fetchRainViewerFrames() {
 }
 
 function makeRainViewerLayer(path) {
-  // RainViewer tile URL pattern (color scheme 2 = standard, size 512)
   const url = `https://tilecache.rainviewer.com${path}/512/{z}/{x}/{y}/2/1_1.png`;
   return L.tileLayer(url, {
     opacity: 0,
     tileSize: 512,
     zoomOffset: -1,
+    maxZoom: 22,
+    maxNativeZoom: 8,
     attribution: 'Radar © <a href="https://rainviewer.com">RainViewer</a>',
     errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
   });
