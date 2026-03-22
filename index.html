@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,12 +11,15 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* 125% base — scales all rem values throughout */
+    html { font-size: 125%; }
+
     :root {
-      --ink:    #0f0e0c;
+      --ink:    #0a0907;
       --paper:  #f5f0e8;
-      --warm:   #c8a96e;
-      --muted:  #8a8070;
-      --border: #d4ccbc;
+      --warm:   #b8922a;
+      --muted:  #5a5248;
+      --border: #b8b0a0;
       --card:   #ede8dc;
     }
 
@@ -151,7 +155,7 @@
 
     /* Error */
     #state-error { display: none; text-align: center; }
-    .error-msg { font-size: 0.8rem; color: #a0522d; line-height: 1.7; margin-bottom: 1.2rem; }
+    .error-msg { font-size: 0.8rem; color: #7a3010; line-height: 1.7; margin-bottom: 1.2rem; }
     #btn-retry {
       font-family: 'DM Mono', monospace; font-size: 0.72rem;
       letter-spacing: 0.1em; text-transform: uppercase;
@@ -189,25 +193,40 @@
       transition: height 0.25s ease;
     }
 
-    /* Fullscreen overlay mode (CSS fallback for Safari iOS) */
-    .radar-section.is-fullscreen {
+    /* Fullscreen modal — appended to body so Safari iOS fixed positioning works */
+    #map-modal {
+      display: none;
       position: fixed;
       inset: 0;
-      z-index: 1000;
-      margin: 0;
+      z-index: 9999;
       background: var(--paper);
-      display: flex;
       flex-direction: column;
       padding: 0.75rem;
     }
-    .radar-section.is-fullscreen #map {
+    #map-modal.open { display: flex; }
+    #map-modal-map {
       flex: 1;
-      height: auto !important;
-      border: none;
+      min-height: 0;
+      border: 1px solid var(--border);
     }
-    .radar-section.is-fullscreen .radar-header { margin-bottom: 0.5rem; }
-    .radar-section.is-fullscreen .precip-legend { margin-top: 0.4rem; }
-    .radar-section.is-fullscreen .radar-note { display: none; }
+    #map-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+    #map-modal-title {
+      font-size: 0.62rem; color: var(--muted);
+      letter-spacing: 0.18em; text-transform: uppercase;
+    }
+    #map-modal-controls { display: flex; align-items: center; gap: 0.6rem; }
+    #btn-modal-close {
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 0.28rem 0.65rem; cursor: pointer;
+    }
+    #map-modal-legend { margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
 
     #btn-fullscreen {
       font-family: 'DM Mono', monospace; font-size: 0.6rem;
@@ -228,6 +247,100 @@
     }
     .legend-label { font-size: 0.58rem; color: var(--muted); letter-spacing: 0.08em; white-space: nowrap; }
     .radar-note { margin-top: 0.5rem; font-size: 0.6rem; color: var(--muted); letter-spacing: 0.05em; line-height: 1.6; }
+
+    /* ── 7-DAY FORECAST ── */
+    .forecast-section { margin-top: 1.8rem; display: none; }
+
+    .forecast-toggle {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: none;
+      border: none;
+      border-top: 1px solid var(--border);
+      padding: 0.85rem 0 0;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      color: var(--muted);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: left;
+    }
+    .forecast-toggle:hover { color: var(--ink); }
+    .forecast-toggle .chevron {
+      font-size: 0.7rem;
+      transition: transform 0.25s ease;
+      display: inline-block;
+    }
+    .forecast-toggle.open .chevron { transform: rotate(180deg); }
+
+    .forecast-body {
+      display: none;
+      margin-top: 1rem;
+    }
+    .forecast-body.open { display: block; }
+
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+    @media (max-width: 420px) {
+      .forecast-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .forecast-card {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.6rem 0.4rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .fc-day {
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .fc-icon { font-size: 1.4rem; line-height: 1; }
+    .fc-temp {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .fc-label {
+      font-size: 0.55rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+    }
+    .fc-precip {
+      font-size: 0.55rem;
+      color: #2a6a98;
+      letter-spacing: 0.04em;
+    }
+
+    .forecast-loading {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 1rem 0;
+      letter-spacing: 0.08em;
+    }
+    .forecast-error {
+      font-size: 0.7rem;
+      color: #7a3010;
+      text-align: center;
+      padding: 0.8rem 0;
+      line-height: 1.6;
+    }
 
     footer { text-align: center; margin-top: 1.8rem; font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em; }
     footer a { color: var(--muted); }
@@ -290,8 +403,8 @@
       <div class="stats-grid">
         <div class="stat"><div class="stat-label">Humidity</div><div class="stat-value" id="humidity">—</div></div>
         <div class="stat"><div class="stat-label">Wind</div><div class="stat-value" id="wind">—</div></div>
-        <div class="stat"><div class="stat-label">Visibility</div><div class="stat-value" id="visibility">—</div></div>
-        <div class="stat"><div class="stat-label">Precipitation</div><div class="stat-value" id="precip">—</div></div>
+        <div class="stat"><div class="stat-label">Sunrise</div><div class="stat-value" id="sunrise">—</div></div>
+        <div class="stat"><div class="stat-label">Sunset</div><div class="stat-value" id="sunset">—</div></div>
       </div>
 
       <div class="refresh-row">
@@ -318,6 +431,18 @@
         </div>
         <p class="radar-note">Past 2 hours of actual radar + near-term nowcast. Data: RainViewer.</p>
       </div>
+      <!-- 7-DAY FORECAST -->
+      <div class="forecast-section" id="forecast-section">
+        <button class="forecast-toggle" id="forecast-toggle" onclick="toggleForecast()">
+          7-Day Forecast
+          <span class="chevron">▾</span>
+        </button>
+        <div class="forecast-body" id="forecast-body">
+          <div class="forecast-loading" id="forecast-loading">Loading forecast…</div>
+          <div class="forecast-grid" id="forecast-grid" style="display:none"></div>
+          <div class="forecast-error" id="forecast-error" style="display:none"></div>
+        </div>
+      </div>
     </div>
 
     <div id="state-error">
@@ -329,9 +454,29 @@
 
   <footer>
     Conditions via <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> ·
+    Forecast via <a href="https://www.weather.gov" target="_blank">NWS</a> ·
     Radar via <a href="https://www.rainviewer.com/api.html" target="_blank">RainViewer</a> ·
     Map © <a href="https://www.openstreetmap.org/copyright" target="_blank">OSM</a> / <a href="https://carto.com" target="_blank">CARTO</a>
   </footer>
+</div>
+
+<!-- Fullscreen map modal -->
+<div id="map-modal">
+  <div id="map-modal-header">
+    <span id="map-modal-title">Precipitation Radar</span>
+    <div id="map-modal-controls">
+      <div class="frame-dots" id="modal-frame-dots"></div>
+      <span class="frame-indicator" id="modal-frame-label">—</span>
+      <button id="btn-modal-play" onclick="togglePlay()">▶ Play</button>
+      <button id="btn-modal-close" onclick="closeFullscreen()">⤡ Close</button>
+    </div>
+  </div>
+  <div id="map-modal-map"></div>
+  <div id="map-modal-legend" class="precip-legend">
+    <span class="legend-label">Light</span>
+    <div class="legend-bar"></div>
+    <span class="legend-label">Heavy</span>
+  </div>
 </div>
 
 <script>
@@ -379,8 +524,9 @@ async function reverseGeocode(lat, lon) {
 // ── Weather ─────────────────────────────────────────────────────
 async function fetchWeather(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-    + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation,visibility,weather_code`
-    + `&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto`;
+    + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation,weather_code`
+    + `&daily=sunrise,sunset`
+    + `&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=auto&forecast_days=1`;
   const r = await fetch(url);
   if (!r.ok) throw new Error('Weather API error');
   return r.json();
@@ -495,57 +641,94 @@ function togglePlay() {
   playing ? stopPlay() : startPlay();
 }
 
-// ── Fullscreen ───────────────────────────────────────────────────
+// ── Fullscreen modal ─────────────────────────────────────────────
+// Moves the Leaflet map into a body-level modal div so Safari iOS
+// position:fixed works correctly (it fails inside scroll containers).
+
+let modalMap = null;
+let modalMarker = null;
+let usingModal = false;
+
 function toggleFullscreen() {
-  const section = document.getElementById('radar-section');
-  const btn = document.getElementById('btn-fullscreen');
-  const el = section;
+  usingModal ? closeFullscreen() : openFullscreen();
+}
 
-  // Try native Fullscreen API first (works in Chrome, Firefox, desktop Safari)
-  const canNative = document.fullscreenEnabled ||
-    document.webkitFullscreenEnabled;
+function openFullscreen() {
+  const modal = document.getElementById('map-modal');
+  const modalMapEl = document.getElementById('map-modal-map');
 
-  if (canNative && !document.fullscreenElement && !document.webkitFullscreenElement) {
-    const req = el.requestFullscreen || el.webkitRequestFullscreen;
-    if (req) {
-      req.call(el).then(() => {
-        btn.textContent = '⤡';
-        setTimeout(() => { map && map.invalidateSize(); }, 200);
-      }).catch(() => cssFullscreen(section, btn));
-      return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  usingModal = true;
+
+  // Build a second Leaflet map inside the modal if not yet created
+  if (!modalMap) {
+    modalMap = L.map(modalMapEl).setView(map.getCenter(), map.getZoom());
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(modalMap);
+  } else {
+    modalMap.setView(map.getCenter(), map.getZoom());
+  }
+
+  // Copy location marker
+  if (modalMarker) modalMap.removeLayer(modalMarker);
+  const c = locationMarker ? locationMarker.getLatLng() : map.getCenter();
+  modalMarker = L.circleMarker(c, {
+    radius: 7, fillColor: '#c8a96e',
+    color: '#0f0e0c', weight: 2, fillOpacity: 1
+  }).addTo(modalMap).bindTooltip('You', { permanent: true, direction: 'top', offset: [0,-8] });
+
+  // Add current radar layers to modal map
+  radarFrames.forEach((f, i) => {
+    if (!f.modalLayer) {
+      f.modalLayer = makeRainViewerLayer(f.path);
+      f.modalLayer.addTo(modalMap);
     }
-  }
+    f.modalLayer.setOpacity(i === currentFrame ? 0.65 : 0);
+  });
 
-  if (document.fullscreenElement || document.webkitFullscreenElement) {
-    const exit = document.exitFullscreen || document.webkitExitFullscreen;
-    if (exit) exit.call(document);
-    btn.textContent = '⤢';
-    setTimeout(() => { map && map.invalidateSize(); }, 200);
-    return;
-  }
+  // Mirror frame dots in modal
+  const mc = document.getElementById('modal-frame-dots');
+  mc.innerHTML = '';
+  radarFrames.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'frame-dot' + (i === currentFrame ? ' active' : '');
+    d.title = radarFrames[i].label;
+    d.onclick = () => { stopPlay(); showFrame(i); };
+    mc.appendChild(d);
+  });
+  document.getElementById('modal-frame-label').textContent =
+    radarFrames[currentFrame]?.label || '—';
 
-  // CSS fallback (Safari iOS)
-  cssFullscreen(section, btn);
+  setTimeout(() => modalMap.invalidateSize(), 100);
 }
 
-function cssFullscreen(section, btn) {
-  const isFs = section.classList.toggle('is-fullscreen');
-  btn.textContent = isFs ? '⤡' : '⤢';
-  // Lock scroll when fullscreen
-  document.body.style.overflow = isFs ? 'hidden' : '';
-  setTimeout(() => { map && map.invalidateSize(); }, 50);
+function closeFullscreen() {
+  document.getElementById('map-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  usingModal = false;
 }
 
-// Handle native fullscreen exit via Esc key
-document.addEventListener('fullscreenchange',     onFsChange);
-document.addEventListener('webkitfullscreenchange', onFsChange);
-function onFsChange() {
-  const btn = document.getElementById('btn-fullscreen');
-  if (btn && !document.fullscreenElement && !document.webkitFullscreenElement) {
-    btn.textContent = '⤢';
-    setTimeout(() => { map && map.invalidateSize(); }, 200);
+// Keep modal in sync when frames change
+const _origShowFrame = showFrame;
+showFrame = function(idx) {
+  _origShowFrame(idx);
+  if (usingModal && radarFrames.length) {
+    radarFrames.forEach((f, i) => {
+      if (f.modalLayer) f.modalLayer.setOpacity(i === idx ? 0.65 : 0);
+    });
+    document.querySelectorAll('#modal-frame-dots .frame-dot')
+      .forEach((el, i) => el.classList.toggle('active', i === idx));
+    const lbl = document.getElementById('modal-frame-label');
+    if (lbl) lbl.textContent = radarFrames[idx]?.label || '—';
+    const pb = document.getElementById('btn-modal-play');
+    if (pb) pb.textContent = playing ? '⏸ Pause' : '▶ Play';
   }
-}
+};
 function startPlay() {
   playing = true;
   document.getElementById('btn-play').textContent = '⏸ Pause';
@@ -557,6 +740,122 @@ function stopPlay() {
   clearInterval(playTimer);
   const btn = document.getElementById('btn-play');
   if (btn) { btn.textContent = '▶ Play'; btn.classList.remove('active'); }
+}
+
+// ── NWS 7-Day Forecast ───────────────────────────────────────────
+// Step 1: lat/lon → NWS grid point  Step 2: grid → forecast periods
+
+// Map NWS icon URL keywords to emoji
+function nwsIcon(iconUrl) {
+  if (!iconUrl) return '🌡️';
+  const u = iconUrl.toLowerCase();
+  if (u.includes('tsra') || u.includes('thunder'))  return '⛈️';
+  if (u.includes('snow') || u.includes('blizzard')) return '❄️';
+  if (u.includes('sleet') || u.includes('fzra'))    return '🌨️';
+  if (u.includes('rain') || u.includes('showers'))  return '🌧️';
+  if (u.includes('drizzle'))                         return '🌦️';
+  if (u.includes('fog') || u.includes('haze'))       return '🌫️';
+  if (u.includes('wind'))                            return '💨';
+  if (u.includes('cloud') || u.includes('ovc') || u.includes('bkn')) return '☁️';
+  if (u.includes('sct') || u.includes('few'))        return '⛅';
+  if (u.includes('skc') || u.includes('sunny') || u.includes('clear')) return '☀️';
+  return '🌡️';
+}
+
+async function fetchNWSForecast(lat, lon) {
+  // Step 1: resolve grid point
+  const ptRes = await fetch(
+    `https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`,
+    { headers: { 'User-Agent': 'weather-app/1.0' } }
+  );
+  if (!ptRes.ok) throw new Error('NWS points lookup failed');
+  const ptData = await ptRes.json();
+  const forecastUrl = ptData.properties?.forecast;
+  if (!forecastUrl) throw new Error('No forecast URL from NWS');
+
+  // Step 2: fetch forecast
+  const fcRes = await fetch(forecastUrl, { headers: { 'User-Agent': 'weather-app/1.0' } });
+  if (!fcRes.ok) throw new Error('NWS forecast fetch failed');
+  const fcData = await fcRes.json();
+  return fcData.properties?.periods || [];
+}
+
+function renderForecast(periods) {
+  // Pair up day/night into single day cards (take daytime periods preferentially)
+  // NWS returns alternating day/night; we grab one per calendar day
+  const days = {};
+  periods.forEach(p => {
+    const date = new Date(p.startTime);
+    const key = date.toDateString();
+    if (!days[key]) days[key] = {};
+    if (p.isDaytime) {
+      days[key].day = p;
+    } else {
+      if (!days[key].night) days[key].night = p;
+    }
+  });
+
+  const grid = document.getElementById('forecast-grid');
+  grid.innerHTML = '';
+
+  Object.values(days).slice(0, 7).forEach(entry => {
+    const p = entry.day || entry.night;
+    if (!p) return;
+
+    const date = new Date(p.startTime);
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const icon = nwsIcon(p.icon);
+    const temp = p.temperature;
+    const unit = p.temperatureUnit === 'F' ? '°F' : '°C';
+    const shortFc = p.shortForecast || '';
+
+    // Extract precip probability if available
+    const precip = p.probabilityOfPrecipitation?.value;
+    const precipStr = (precip !== null && precip !== undefined) ? `💧 ${precip}%` : '';
+
+    const card = document.createElement('div');
+    card.className = 'forecast-card';
+    card.innerHTML = `
+      <div class="fc-day">${dayName}</div>
+      <div class="fc-icon">${icon}</div>
+      <div class="fc-temp">${temp}${unit}</div>
+      <div class="fc-label">${shortFc}</div>
+      ${precipStr ? `<div class="fc-precip">${precipStr}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('forecast-loading').style.display = 'none';
+  document.getElementById('forecast-error').style.display = 'none';
+  grid.style.display = 'grid';
+}
+
+function showForecastError(msg) {
+  document.getElementById('forecast-loading').style.display = 'none';
+  document.getElementById('forecast-grid').style.display = 'none';
+  const el = document.getElementById('forecast-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function loadForecast(lat, lon) {
+  document.getElementById('forecast-loading').style.display = 'block';
+  document.getElementById('forecast-grid').style.display = 'none';
+  document.getElementById('forecast-error').style.display = 'none';
+  try {
+    const periods = await fetchNWSForecast(lat, lon);
+    if (!periods.length) throw new Error('No forecast periods returned');
+    renderForecast(periods);
+  } catch(e) {
+    showForecastError('Forecast unavailable. NWS only covers US locations.');
+  }
+}
+
+function toggleForecast() {
+  const btn = document.getElementById('forecast-toggle');
+  const body = document.getElementById('forecast-body');
+  const isOpen = body.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
 }
 
 // ── Main ─────────────────────────────────────────────────────────
@@ -580,15 +879,18 @@ async function locate() {
       document.getElementById('condition').textContent = WMO_CODES[c.weather_code] || `Code ${c.weather_code}`;
       document.getElementById('humidity').textContent  = c.relative_humidity_2m + '%';
       document.getElementById('wind').textContent      = Math.round(c.wind_speed_10m) + ' mph';
-      const vis = c.visibility;
-      document.getElementById('visibility').textContent =
-        vis >= 1000 ? (vis / 1609).toFixed(1) + ' mi' : Math.round(vis) + ' m';
-      document.getElementById('precip').textContent   = c.precipitation.toFixed(2) + '"';
+      const fmtTime = iso => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('sunrise').textContent   = fmtTime(weather.daily.sunrise[0]);
+      document.getElementById('sunset').textContent    = fmtTime(weather.daily.sunset[0]);
       document.getElementById('timestamp').textContent =
         'Updated ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 
       show('state-result');
       document.getElementById('radar-section').style.display = 'block';
+      document.getElementById('forecast-section').style.display = 'block';
+
+      // Load forecast in background (don't await — don't block radar)
+      loadForecast(lat, lon);
 
       setTimeout(async () => {
         initMap(lat, lon);
@@ -612,3 +914,4 @@ async function locate() {
 
 </body>
 </html>
+
