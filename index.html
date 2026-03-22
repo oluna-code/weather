@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -563,11 +562,12 @@ function tsLabel(unix) {
 // ── Map init ────────────────────────────────────────────────────
 function initMap(lat, lon) {
   if (!map) {
-    map = L.map('map').setView([lat, lon], 7);
+    map = L.map('map', { maxZoom: 22 }).setView([lat, lon], 7);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com">CARTO</a>',
       subdomains: 'abcd',
-      maxZoom: 19
+      maxZoom: 22,
+      maxNativeZoom: 19
     }).addTo(map);
   } else {
     map.setView([lat, lon], 7);
@@ -663,12 +663,13 @@ function openFullscreen() {
 
   // Build a second Leaflet map inside the modal if not yet created
   if (!modalMap) {
-    modalMap = L.map(modalMapEl).setView(map.getCenter(), map.getZoom());
+    modalMap = L.map(modalMapEl, { maxZoom: 22 }).setView(map.getCenter(), map.getZoom());
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com">CARTO</a>',
       subdomains: 'abcd',
-      maxZoom: 19
+      maxZoom: 22,
+      maxNativeZoom: 19
     }).addTo(modalMap);
   } else {
     modalMap.setView(map.getCenter(), map.getZoom());
@@ -914,4 +915,3 @@ async function locate() {
 
 </body>
 </html>
-
